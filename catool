@@ -1,0 +1,231 @@
+#!/usr/bin/env bash -e
+
+if [[ ! $(bash --version | grep "version 4") ]]; then
+  echo "FATAL: catool requires bash version 4"
+  exit 100
+fi
+
+__dirname=$(dirname $0)
+__pwd=$(pwd)
+
+. $__dirname/lib/dn.functions.sh
+. $__dirname/lib/validation.functions.sh
+
+case "$1" in
+"init")
+  notEmpty "<CA Name>" $2
+
+  ca_name=$2
+  ca_root="$__pwd/$ca_name"
+  ca_cn="$ca_name Certificate Authority"
+
+  echo "Creating new CA \"$ca_name\" in $ca_root"
+  git init $ca_root
+
+  ## catool Config
+  readDNField "Country Code" "C" "US"
+  readDNField "State or Province Name (full name)" "ST" "New Hampshire"
+  readDNField "Locality Name (city, district)" "L" "Manchester"
+  readDNField "Organization Name (company)" "O"
+  readDNField "Organizational Unit Name (department, division)" "OU" "Engineering\/Operations"
+
+  echo "Common Name (hostname, FQDN, IP, or your name): $ca_cn"
+  DN[CN]=$ca_cn
+
+  readDNField "Email Address" "emailAddress"
+  DNString=$(formatDN)
+
+  echo "## CATool Configuration
+
+$(exportDN)
+" > $ca_root/CATool
+
+  ## Gitignore
+  echo "## CATool .gitignore 
+private/*
+.project
+.settings
+" > $ca_root/.gitignore
+
+  ## ca.conf
+  echo "## CATool ca.conf
+[ ca ]
+default_ca = $2
+
+[ $2 ]
+certificate = $ca_root/certs/ca-cert.pem
+database = $ca_root/index.db
+private_key = $ca_root/private/ca-key.pem
+serial = $ca_root/serial
+new_certs_dir = $ca_root/certs
+default_days = 3650
+
+x509_extensions = usr_cert
+crl_extensions = crl_ext
+policy = policy_match
+
+default_crl_hours = 24
+default_md = sha256
+preserve = no
+
+[ policy_match ]
+countryName = match
+stateOrProvinceName = match
+localityName = match
+organizationName = match
+organizationalUnitName = optional
+commonName = supplied
+emailAddress = optional
+
+[ req ]
+default_bits = 4096
+attributes = req_attributes
+distinguished_name = req_distinguished_name
+x509_extensions = v3_ca
+req_extensions = v3_req
+string_mask = nombstr
+
+[ req_distinguished_name ]
+countryName = Country Name (2 letter code)
+countryName_default = ${DN[CO]}
+countryName_min = 2
+countryName_max = 2
+
+stateOrProvinceName = State or Province Name (full name)
+stateOrProvinceName_default = ${DN[ST]}
+
+localityName = Locality Name (city, district)
+localityName_default = ${DN[LO]}
+
+organizationName = Organization Name (company)
+organizationName_default = ${DN[O]}
+
+organizationalUnitName = Organizational Unit Name (department, division)
+organizationalUnitName_default = ${DN[OU]}
+
+commonName = Common Name (hostname, FQDN, IP, or your name)
+commonName_max = 64
+
+emailAddress = Email Address
+emailAddress_max = 40
+emailAddress_default = hostmaster@dyn.com
+
+[ req_attributes ]
+#challengePassword = A challenege password
+#challengePassword_min = 4
+#challengePassword_max = 20
+#unstructuredName = An optional company name
+
+[ usr_cert ]
+basicConstraints= CA:FALSE
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer:always
+subjectAltName=email:copy
+issuerAltName=issuer:copy
+#nsCaRevocationUrl = http://www.domain.dom/ca-crl.pem
+#nsBaseUrl = 
+#nsRenewalUrl =
+#nsCaPolicyUrl = 
+#nsSslServerName =
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+
+[ v3_ca ]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer:always
+basicConstraints = CA:TRUE
+keyUsage = cRLSign, keyCertSign
+subjectAltName=email:copy
+issuerAltName=issuer:copy
+
+[ crl_ext ]
+issuerAltName=issuer:copy
+authorityKeyIdentifier=keyid:always,issuer:always
+" > $ca_root/ca.conf
+
+  ## CA Directories/Metafiles
+  mkdir -p $ca_root/certs $ca_root/private $ca_root/requests
+  echo "01" > $ca_root/serial
+  touch $ca_root/index.db $ca_root/requests/.gitkeep
+
+  ## Create CA key and self-signed certificate
+  openssl req -new -x509 -days 3650 -config $ca_root/ca.conf -keyform PEM -keyout $ca_root/private/ca-key.pem -outform PEM -out $ca_root/certs/ca-cert.pem -subj "$(formatDN)"
+
+  ## Commit Changes
+  cd $ca_root
+  git add .
+  git commit -m "Created CA $ca_name in $ca_root"
+  ;;
+
+"cacert")
+  validCA
+  cat $__pwd/certs/ca-cert.pem
+  ;;
+
+"request")
+  validCA  
+  canRequest $2
+  . $__pwd/CATool
+
+  DN[CN]=$2
+  openssl req -new -config $__pwd/ca.conf -keyform PEM -keyout $__pwd/private/${DN[CN]}.pem -outform PEM -out $__pwd/requests/${DN[CN]}.pem -nodes -subj "$(formatDN)"
+  git add $__pwd/requests/${DN[CN]}.pem
+  git commit -m "Creating CSR for ${DN[CN]}"
+  ;;
+
+"importreq")
+  validCA
+  notEmpty "<CSR Path>" $2
+
+  if [[ -n $3 ]]; then
+    csr_cn=$3
+  else
+    csr_cn="$(basename $2)"
+    csr_cn="${csr_cn%.*}"
+  fi
+
+  canRequest $csr_cn
+
+  if [[ ! -f $2 ]]; then
+    echo "FATAL: cannot find CSR file $2"
+    printUsage
+  fi
+
+  openssl req -in $2 >> /dev/null
+  if [[ ! ?$ ]]; then
+    echo "FATAL: $2 is not a valid CSR"
+    printUsage
+  fi
+
+  cp $2 $__pwd/requests/${csr_cn}.pem
+  echo "Imported CSR for $csr_cn to $__pwd/requests/${csr_cn}.pem"
+
+  git add $__pwd/requests/${csr_cn}.pem
+  git commit -m "Imported CSR for $csr_cn"
+  ;;
+
+"sign")
+  validCA
+  canSign $2
+  
+  openssl ca -out $__pwd/certs/$2.pem -config $__pwd/ca.conf -infiles $__pwd/requests/$2.pem
+  git add $__pwd/certs/$2.pem $__pwd/serail* $__pwd/index.db* 
+  git commit -m "Signing Certificate for $2"
+  ;;
+
+"deny")
+  validCA
+  notSigned $2
+
+  rm -f $__pwd/private/${2}.pem
+  git rm --ignore-unmatch $__pwd/requests/${2}.pem
+  git commit -m "Deny $2: Removing stored key and CSR"
+  ;;
+
+"revoke")
+  echo "Not implimented yet"
+  ;;
+
+esac

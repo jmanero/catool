@@ -1,0 +1,7 @@
+#!/usr/bin/env bash -e
+
+if [[ ! $(bash --version | grep "version 4") ]]; then
+  echo "FATAL: catool requires bash version 4"
+  exit 100
+fi
+
