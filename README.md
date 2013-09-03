@@ -18,10 +18,10 @@ install `bash 4.x` in `/usr/local/Cellar/bash/4.x.x/bin/bash`, which you can lin
 * **openssl** To do all of the SSL things...
 
 # Usage
-* `init <CA Name>` - - - - - - - - - - Create a new CA at ./<CA Name>
-* `request <Common Name>`  - - - - - - Create a new private kay and CSR for <Common Name>
-* `importreq <Path> [<Common Name>]` - Import an existing CSR from <Path>; Optionally, store as <Common Name>]
-* `sign <Common Name>` - - - - - - - - Sign an existing CSR for <Common Name>
+* `init <CA Name>` - - - - - - - - - - Create a new CA at `./<CA Name>`
+* `request <Common Name>`  - - - - - - Create a new private kay and CSR for `<Common Name>`
+* `importreq <Path> [<Common Name>]` - Import an existing CSR from `<Path>`; Optionally, store as `<Common Name>`
+* `sign <Common Name>` - - - - - - - - Sign an existing CSR for `<Common Name>`
 * `deny <Common Name>` - - - - - - - - Remove stored CSR and private key for an unsigned request
 
 # License
