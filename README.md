@@ -7,7 +7,7 @@ The included install script will fetch the latest version of `catool` form GitHu
 and put it in your `$HOME/bin` folder. You will need to add `$HOME/bin` to your PATH.
 
 ```
-curl https://github.com/jmanero/catool/raw/master/install | bash
+curl -L https://github.com/jmanero/catool/raw/master/install | bash
 ```
 
 ### Requirements
