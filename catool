@@ -218,7 +218,7 @@ authorityKeyIdentifier=keyid:always,issuer:always
   canSign $2
   
   openssl ca -out $__pwd/certs/$2.pem -config $__pwd/ca.conf -infiles $__pwd/requests/$2.pem
-  git add $__pwd/certs/$2.pem $__pwd/serail* $__pwd/index.db* 
+  git add $__pwd/certs/$2.pem $__pwd/serial* $__pwd/index.db* 
   git commit -m "Signing Certificate for $2"
   ;;
 
