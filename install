@@ -5,3 +5,39 @@ if [[ ! $(bash --version | grep "version 4") ]]; then
   exit 100
 fi
 
+source_url="https://github.com/jmanero/catool/archive/master.tar.gz"
+
+temp_dir="$(mktemp -d -t catool)"
+echo "Using Temporary Directory $temp_dir"
+trap "echo 'Removing temporary files'; rm -Rf $temp_dir" EXIT
+
+mkdir -p $HOME/bin
+cd $temp_dir
+
+echo "Downloading $source_url"
+wget -nv $source_url
+
+echo "
+ +--------------------------------------------------------------------------------------+
+ | Please take a moment to ensure that the following SHA1 fingerprint of the downloaded |
+ | tarball is correct for version XXX (See https://github.com/jmanero/catool)           |
+ +--------------------------------------------------------------------------------------+
+"
+openssl sha1 master.tar.gz
+
+printf "\nAre you sure [y/n]? "
+read confirm
+
+if [ ! "x$confirm" = "xy" ]; then
+  echo "Aborting install"
+  exit 1
+fi
+
+tar -xzf master.tar.gz --strip-components=1
+rsync -az catool lib $HOME/bin
+
+echo ""
+echo "Installed catool in $HOME/bin"
+if [[ ! $(echo $PATH | grep $HOME/bin) ]]; then
+  echo "$HOME/bin is not in your \$PATH. Add $HOME/bin to your to use catool!"
+fi
