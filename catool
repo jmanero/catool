@@ -38,7 +38,7 @@ case "$1" in
   echo "## CATool Configuration
 
 $(exportDN)
-" > $ca_root/CATool
+" > $ca_root/.CATool
 
   ## README.md
   echo "$ca_name Certificate Authority
@@ -174,7 +174,7 @@ authorityKeyIdentifier=keyid:always,issuer:always
 "request")
   validCA  
   canRequest $2
-  . $__pwd/CATool
+  . $__pwd/.CATool
 
   DN[CN]=$2
   openssl req -new -config $__pwd/ca.conf -keyform PEM -keyout $__pwd/private/${DN[CN]}.pem -outform PEM -out $__pwd/requests/${DN[CN]}.pem -nodes -subj "$(formatDN)"
