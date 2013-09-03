@@ -235,4 +235,7 @@ authorityKeyIdentifier=keyid:always,issuer:always
   echo "Not implimented yet"
   ;;
 
+*)
+  printUsage
+  
 esac
