@@ -17,22 +17,6 @@ cd $temp_dir
 echo "Downloading $source_url"
 wget -nv $source_url
 
-echo "
- +--------------------------------------------------------------------------------------+
- | Please take a moment to ensure that the following SHA1 fingerprint of the downloaded |
- | tarball is correct for version XXX (See https://github.com/jmanero/catool)           |
- +--------------------------------------------------------------------------------------+
-"
-openssl sha1 master.tar.gz
-
-printf "\nAre you sure [y/n]? "
-read confirm
-
-if [ ! "x$confirm" = "xy" ]; then
-  echo "Aborting install"
-  exit 1
-fi
-
 tar -xzf master.tar.gz --strip-components=1
 rsync -az catool lib $HOME/bin
 

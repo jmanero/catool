@@ -10,12 +10,11 @@ and put it in your `$HOME/bin` folder. You will need to add `$HOME/bin` to your 
 curl https://github.com/jmanero/catool/raw/master/install | bash
 ```
 
-
 ### Requirements
 * **bash 4.x** Note that many versions of OSX shiped with `bash 3.x`. Homebrew will
 install `bash 4.x` in `/usr/local/Cellar/bash/4.x.x/bin/bash`, which you can link to
 `/bin/bash` (!! At your own risk !!)
-* **wget** Used by the install script to fetch the repository
+* **wget** and **rsync** Used by the install script to fetch the repository and copy scripts into place
 * **openssl** To do all of the SSL things...
 
 # License
