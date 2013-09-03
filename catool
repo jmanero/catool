@@ -40,6 +40,13 @@ case "$1" in
 $(exportDN)
 " > $ca_root/CATool
 
+  ## README.md
+  echo "$ca_name Certificate Authority
+====
+Managed with CATool: https://github.com/jmanero/catool
+
+" > $ca_root/README.md
+
   ## Gitignore
   echo "## CATool .gitignore 
 private/*
