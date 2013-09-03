@@ -108,7 +108,7 @@ commonName_max = 64
 
 emailAddress = Email Address
 emailAddress_max = 40
-emailAddress_default = hostmaster@dyn.com
+emailAddress_default = ${DN[emailAddress]}
 
 [ req_attributes ]
 #challengePassword = A challenege password
