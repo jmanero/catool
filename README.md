@@ -16,6 +16,7 @@ install `bash 4.x` in `/usr/local/Cellar/bash/4.x.x/bin/bash`, which you can lin
 `/bin/bash` (!! At your own risk !!)
 * **wget** and **rsync** Used by the install script to fetch the repository and copy scripts into place
 * **openssl** To do all of the SSL things...
+* **git**
 
 # Usage
 * `init <CA Name>` - - - - - - - - - - Create a new CA at `./<CA Name>`
